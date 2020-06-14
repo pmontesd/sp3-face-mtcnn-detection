@@ -1,6 +1,7 @@
 from pathlib import Path
 import cv2
 import MtcnnDetector
+import FaceNormalizationUtils as faceutils
 
 def draw_bb(image, bb):
     (x, y, w, h) = bb
@@ -11,9 +12,21 @@ def draw_pts(image, pts):
     cv2.circle(image, ((int)(lex), (int)(ley)), 4, (0, 0, 255), -1)
     cv2.circle(image, ((int)(rex), (int)(rey)), 4, (0, 255, 0), -1)
 
+def normalize_color_image(image, pts):
+    (lex, ley, rex, rey) = pts
+    # Fr HS normalization
+    B, G, R = cv2.split(image)
+    normalizator.normalize_gray_img(B, lex, ley, rex, rey, faceutils.Kind_wraping.FACE)
+    Bnorm = normalizator.normf_image
+    normalizator.normalize_gray_img(G, lex, ley, rex, rey, faceutils.Kind_wraping.FACE)
+    Gnorm = normalizator.normf_image
+    normalizator.normalize_gray_img(R, lex, ley, rex, rey, faceutils.Kind_wraping.FACE)
+    Rnorm = normalizator.normf_image
+    return cv2.merge((Bnorm, Gnorm, Rnorm))
 
 
 FDet = MtcnnDetector.MtcnnDetector()
+normalizator = faceutils.Normalization()
 
 p = Path('Database_real_and_fake_face_160x160')
 
@@ -27,12 +40,10 @@ for imageFile in list(p.glob('**/*.jpg')):
     if faces:
         face_bb, eyes_pts, shape = FDet.detect_largest_face(faces)
 
-        # Let's draw a rectangle around the detected faces
-        draw_bb(image, face_bb)
-        draw_pts(image, eyes_pts)
+        # Normalize and show color channels
+        normalized_image = normalize_color_image(image, eyes_pts)
         # Convert image to RGB and show image
-        cv2.imshow('img', image)
-        cv2.waitKey(500)
-    
-        
-#normalizatorHS = faceutils.Normalization()
+        cv2.imshow("Normalized", normalized_image)
+        cv2.waitKey(100)
+    else:
+        print(F"No face detected in {imageFile}", file=sys.stderr) 
