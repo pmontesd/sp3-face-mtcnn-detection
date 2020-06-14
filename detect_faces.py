@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import cv2
 import MtcnnDetector
 import FaceNormalizationUtils as faceutils
@@ -24,13 +25,24 @@ def normalize_color_image(image, pts):
     Rnorm = normalizator.normf_image
     return cv2.merge((Bnorm, Gnorm, Rnorm))
 
+def get_new_path(curr_path, orig_path, dest_path):
+    relative = curr_path.relative_to(orig_path)
+    return dest_path.joinpath(relative)
+
+def is_target_missing(target):
+    return not target.parent.is_dir()
+
+def create_target_dir(target):
+    target.parent.mkdir(parents=True)
+
 
 FDet = MtcnnDetector.MtcnnDetector()
 normalizator = faceutils.Normalization()
 
-p = Path('Database_real_and_fake_face_160x160')
+s = Path('Database_real_and_fake_face_160x160')
+d = Path('Database_real_and_fake_face_normalized')
 
-for imageFile in list(p.glob('**/*.jpg')):
+for imageFile in list(s.glob('**/*.jpg')):
 
     # Loading the image to be tested in grayscale
     image = cv2.imread(str(imageFile))
@@ -42,6 +54,10 @@ for imageFile in list(p.glob('**/*.jpg')):
 
         # Normalize and show color channels
         normalized_image = normalize_color_image(image, eyes_pts)
+        target = get_new_path(imageFile, s, d)
+        if is_target_missing(target):
+            create_target_dir(target)
+        cv2.imwrite(str(target), normalized_image) 
         # Convert image to RGB and show image
         cv2.imshow("Normalized", normalized_image)
         cv2.waitKey(100)
