@@ -1,4 +1,7 @@
-from mtcnn.mtcnn import MTCNN
+# /****************************************************************************************
+#   Modesto Castrillón Santana
+#   January 2008-2018
+# ****************************************************************************************/from mtcnn.mtcnn import MTCNN
 import numpy as np
 
 class MtcnnDetector:
